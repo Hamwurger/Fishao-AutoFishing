@@ -1,0 +1,14 @@
+# built program - published as a GitHub Release, not in the code
+*.exe
+*.exe.new
+*.exe.*
+
+# personal data of whoever runs the bot
+FishaoBot.ini
+catches.csv
+record.png
+bait.png
+bait_shop.png
+unknown_*.png
+window_*.png
+debug_*.png
