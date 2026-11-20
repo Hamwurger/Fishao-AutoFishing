@@ -9,6 +9,8 @@ public class Stepper : Control
 {
     int value, min, max, step;
     public string Unit, Description;
+    public string Help = "";              // longer explanation behind the "?" next to the label
+    Rectangle helpRect; bool helpHover;
     public event EventHandler ValueChanged;
     int hoverBtn = 0; // -1 minus, +1 plus
     readonly Timer repeat = new Timer { Interval = 380 };
@@ -41,10 +43,16 @@ public class Stepper : Control
     {
         int h = Minus.Contains(e.Location) ? -1 : (Plus.Contains(e.Location) ? 1 : 0);
         if (h != hoverBtn) { hoverBtn = h; Invalidate(); }
-        Cursor = h != 0 ? Cursors.Hand : Cursors.Default;
+        bool hh = Help.Length > 0 && helpRect.Contains(e.Location);
+        if (hh != helpHover)
+        {
+            helpHover = hh; Invalidate();
+            if (hh) HelpTip.Show(this, Help, new Point(helpRect.X, helpRect.Bottom + 6)); else HelpTip.Hide(this);
+        }
+        Cursor = h != 0 || hh ? Cursors.Hand : Cursors.Default;
         base.OnMouseMove(e);
     }
-    protected override void OnMouseLeave(EventArgs e) { hoverBtn = 0; StopRepeat(); Invalidate(); base.OnMouseLeave(e); }
+    protected override void OnMouseLeave(EventArgs e) { hoverBtn = 0; helpHover = false; HelpTip.Hide(this); StopRepeat(); Invalidate(); base.OnMouseLeave(e); }
     protected override void OnMouseDown(MouseEventArgs e)
     {
         Focus();
@@ -63,6 +71,12 @@ public class Stepper : Control
         Theme.PaintParentBg(this, g, Theme.Card);
         var box = Box;
         int textW = box.X - 12;
+        if (Help.Length > 0)
+        {   // "?" right after the label
+            int tw = TextRenderer.MeasureText(g, Text, Font, Size.Empty, TextFormatFlags.NoPadding).Width;
+            int cy = Description.Length > 0 ? Height / 2 - 8 : Height / 2;
+            helpRect = HelpTip.DrawIcon(g, Math.Min(tw + 10, textW - 18), cy, helpHover);
+        }
         if (Description.Length > 0)
         {
             TextRenderer.DrawText(g, Text, Font, new Rectangle(0, 0, textW, Height / 2 + 2), Theme.Fg, TextFormatFlags.Bottom | TextFormatFlags.EndEllipsis);

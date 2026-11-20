@@ -66,11 +66,46 @@ public class SettingsPage : Page
         // ---- timing
         var timeCard = Place(grid, new Card(L.T("Časování", "Timing"), IconKind.Gear), 1, 0);
         var timeBody = Stack(timeCard);
-        var hover = new Stepper(L.T("Najetí nad vodu", "Hover over water"), L.T("jak dlouho „držet“ myš před nahozením", "how long to hold the mouse before the cast"), 200, 3000, FishaoBot.CastHoverMs, 100, "ms");
+        var hover = new Stepper(L.T("Míření před nahozením", "Aim before the cast"), L.T("jak dlouho myš míří na vodu, než klikne", "how long the mouse aims at the water before clicking"), 200, 3000, FishaoBot.CastHoverMs, 100, "ms");
+        hover.Help = L.T(
+            "Než bot nahodí, přesune (neviditelně, tvoje myš se nehne) kurzor nad vybrané místo na vodě, chvíli počká a teprve pak klikne. " +
+            "Hra tak stihne ukázat zaměřovač a prut se nahodí přesně tam.\n\n" +
+            "•  Doporučeno: 300–800 ms (1000 ms = 1 sekunda).\n" +
+            "•  Když se prut někdy nenahodí nebo postava místo toho odejde, zvyš to.\n" +
+            "•  Nižší číslo = o chlup rychlejší nahazování.",
+            "Before casting, the bot moves the cursor over the chosen spot on the water (invisibly - your mouse doesn't move), waits a moment and only then clicks. " +
+            "That gives the game time to show the aim, so the rod lands exactly there.\n\n" +
+            "•  Recommended: 300–800 ms (1000 ms = 1 second).\n" +
+            "•  If the rod sometimes doesn't cast or the character walks away instead, raise it.\n" +
+            "•  A lower number = slightly faster casting.");
         hover.ValueChanged += delegate { FishaoBot.CastHoverMs = hover.Value; AppSettings.Save(); };
-        var timeout = new Stepper(L.T("Max. čekání na záběr", "Max. wait for a bite"), L.T("pojistka - pak nahodí znovu", "safety net - then it casts again"), 20, 600, FishaoBot.BiteTimeoutMs / 1000, 10, "s");
+        var timeout = new Stepper(L.T("Max. čekání na záběr", "Max. wait for a bite"), L.T("když ryba do té doby nezabere, nahodí znovu", "if no fish bites by then, it casts again"), 20, 600, FishaoBot.BiteTimeoutMs / 1000, 10, "s");
+        timeout.Help = L.T(
+            "Kolik sekund nejvýš čekat od nahození na záběr (na minihru).\n\n" +
+            "Bot sám pozná, když hra prut stáhne nebo splávek zmizí, a hned nahodí znovu - tohle je jen pojistka pro případ, " +
+            "že se něco zasekne a nic se neděje.\n\n" +
+            "•  Doporučeno: 60–120 s.\n" +
+            "•  Moc nízké číslo = bot může prut vytáhnout dřív, než ryba stihne zabrat.",
+            "The longest time in seconds to wait for a bite (the minigame) after casting.\n\n" +
+            "The bot notices by itself when the game reels the line in or the float disappears and casts again right away - this is only " +
+            "a safety net for when something gets stuck and nothing happens.\n\n" +
+            "•  Recommended: 60–120 s.\n" +
+            "•  Too low = the bot may reel in before a fish has time to bite.");
         timeout.ValueChanged += delegate { FishaoBot.BiteTimeoutMs = timeout.Value * 1000; AppSettings.Save(); };
-        var after = new Stepper(L.T("Čekání na výsledek", "Wait for the result"), L.T("po minihře, než se objeví okno s rybou", "after the minigame, before the fish window shows"), 1, 20, FishaoBot.AfterGameDelayMs / 1000, 1, "s");
+        var after = new Stepper(L.T("Čekání na okno s rybou", "Wait for the fish window"), L.T("po minihře - jak dlouho hledat okno s úlovkem", "after the minigame - how long to look for the catch window"), 1, 20, FishaoBot.AfterGameDelayMs / 1000, 1, "s");
+        after.Help = L.T(
+            "Po dohrání minihry hra ukáže animaci a pak otevře okno s rybou (nebo zprávu, že utekla). " +
+            "Bot okno přečte (jméno, velikost, body), zapíše do Úlovků a zavře křížkem.\n\n" +
+            "Tohle je, jak dlouho na to okno nejvýš čeká (+ 6 s rezerva). Jakmile se okno objeví, bot pokračuje hned - " +
+            "vyšší číslo tedy rybaření nezpomaluje.\n\n" +
+            "•  Doporučeno: 2–5 s.\n" +
+            "•  Když se hra seká a v Úlovcích chybí ryby, zvyš to.",
+            "After the minigame, the game plays an animation and then opens the fish window (or a message that it got away). " +
+            "The bot reads it (name, size, points), writes it to Catches and closes it with its X.\n\n" +
+            "This is the longest it waits for that window (+ 6 s spare). As soon as the window shows up, the bot carries on - " +
+            "so a higher number doesn't slow fishing down.\n\n" +
+            "•  Recommended: 2–5 s.\n" +
+            "•  If the game lags and fish are missing from Catches, raise it.");
         after.ValueChanged += delegate { FishaoBot.AfterGameDelayMs = after.Value * 1000; AppSettings.Save(); };
         foreach (var c in new Control[] { hover, timeout, after }) { c.Margin = new Padding(0, 0, 0, 14); timeBody.Controls.Add(c); }
 
@@ -96,6 +131,11 @@ public class SettingsPage : Page
         pack.SelectedChanged += delegate { FishaoBot.EnergyPack = pack.Selected; showPrice(); AppSettings.Save(); };
         var wait = new Stepper(L.T("Čekat na energii", "Wait for energy"), L.T("jen když nejde přečíst odpočet ve hře", "only when the game's countdown can't be read"), 1, 60, FishaoBot.EnergyWaitMinutes, 1, "min");
         wait.Margin = new Padding(0);
+        wait.Help = L.T(
+            "Když dojde energie a kupování je vypnuté, bot přečte ve hře odpočet do další energie, počká a pak sám nahodí.\n\n" +
+            "Tohle číslo se použije jen tehdy, když odpočet přečíst nejde - bot pak čeká tolik minut a zkusí to znovu.",
+            "When the energy runs out and buying is off, the bot reads the game's countdown to the next energy, waits and then casts by itself.\n\n" +
+            "This number is used only when the countdown can't be read - the bot then waits this many minutes and tries again.");
         wait.ValueChanged += delegate { FishaoBot.EnergyWaitMinutes = wait.Value; AppSettings.Save(); };
         enBody.Controls.Add(buy); enBody.Controls.Add(pack); enBody.Controls.Add(price); enBody.Controls.Add(wait);
 
@@ -129,6 +169,11 @@ public class SettingsPage : Page
         pay.SelectedChanged += delegate { FishaoBot.BaitPay = pay.Selected; AppSettings.Save(); };
         var packs = new Stepper(L.T("Kolik balíčků koupit", "Packs to buy"), L.T("najednou (třešně = 40 kusů v balíčku)", "at once (cherries = 40 in a pack)"), 1, 10, FishaoBot.BaitPacks, 1, "×");
         packs.Margin = new Padding(0);
+        packs.Help = L.T(
+            "Kolik balíčků vybrané návnady bot koupí najednou, když v batohu žádná nezbude. Pak ji hned nasadí.\n\n" +
+            "Víc balíčků = méně častých nákupů, ale víc utracených peněz najednou.",
+            "How many packs of the chosen bait the bot buys at once when the bag has none left. It then puts it on right away.\n\n" +
+            "More packs = fewer trips to the shop, but more money spent at once.");
         packs.ValueChanged += delegate { FishaoBot.BaitPacks = packs.Value; AppSettings.Save(); };
 
         Action showShop = delegate { payLabel.Visible = pay.Visible = packs.Visible = buyBait.Checked; };
