@@ -166,8 +166,13 @@ public class FloatingFaces : IDisposable
 
     public void Dispose()
     {
+        // switch off first: the window may still repaint while it closes - it must not draw freed pictures
+        enabled = false;
         Theme.Backdrop = null;
-        timer.Dispose();
-        foreach (var f in faces) f.Sprite.Dispose();
+        timer.Stop(); timer.Dispose();
+        foreach (var c in layers) c.Paint -= PaintLayer;
+        var old = faces.ToArray();
+        faces.Clear();
+        foreach (var f in old) f.Sprite.Dispose();
     }
 }
