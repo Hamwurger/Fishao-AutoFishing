@@ -22,7 +22,7 @@ using System.Web.Script.Serialization;
 public static class Updater
 {
     public const string Version = "1.1.0";          // THIS program's version - raise it for every release
-    public const string DefaultRepo = "Hamwurger/Fishao-bot";         // "github-user/repository" - built into the exe
+    public const string DefaultRepo = "Hamwurger/Fishao-AutoFishing";         // "github-user/repository" - built into the exe
     public static string Repo = DefaultRepo;        // FishaoBot.ini "updaterepo=" can override it
     public static bool AutoCheck = true;            // look for a new version when the program starts
     const string AssetName = "FishaoBot.exe";
