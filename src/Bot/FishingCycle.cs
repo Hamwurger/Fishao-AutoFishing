@@ -50,9 +50,9 @@ public static partial class FishaoBot
         if (mask.Length < MinMaskPx) Log(L.T("Nahození jsem na obrazovce nepoznal - neodešla postava místo nahazování?", "Could not see the cast on screen - did the character walk away instead of casting?"));
         else LearnBrightness(OuterBrightness(before)); // the cast worked = no dialog was open = normal brightness
         lastWasGame = false;
-        var fl = LearnFloat(before, a, castPoint.Value);   // colours of the float at the cast point
-        int flMin = fl == null ? 0 : Math.Max(3, FloatPixels(fl, before, a) / 5);
-        long floatGoneAt = -1; bool flSeen = false;
+        // what the cast put on the water (the float, the rod tip...) - not always exactly at the click
+        var marks = LearnMarks(before, a, b, castPoint.Value);
+        if (marks.Count == 0) Log(L.T("Splávek zatím nevidím - hledám ho dál.", "Can't see the float yet - still looking."));
         SetStatus(L.T("Čekám na záběr", "Waiting for a bite"));
 
         Bar bar = null; int top = 0;
@@ -68,19 +68,19 @@ public static partial class FishaoBot
             if (sw.ElapsedMilliseconds - lastCheck < 250) continue;
             lastCheck = sw.ElapsedMilliseconds;
 
-            // 0) main signal: the float is gone from the cast point. On a bite the float also dips, but then
-            //    the minigame appears 1.2 s later, so "gone for 1.7 s" means the game reeled the line in.
-            if (fl != null)
+            // the float was not found right after the cast (still flying, splash...) - keep looking for a few seconds
+            if (marks.Count == 0 && sw.ElapsedMilliseconds < 8000)
             {
-                int n = FloatPixels(fl, before, f);
-                if (n >= flMin) { flSeen = true; floatGoneAt = -1; }
-                else if (flSeen)
-                {
-                    if (floatGoneAt < 0) floatGoneAt = sw.ElapsedMilliseconds;
-                    else if (sw.ElapsedMilliseconds - floatGoneAt >= 1700)
-                    { noFish++; Log(L.T("Nezabrala - splávek zmizel, nahazuji znovu (po ", "No bite - the float is gone, casting again (after ") + (sw.ElapsedMilliseconds / 1000.0 + 2.9).ToString("0.0") + " s)."); Changed(); Wait(300); return; }
-                }
+                if (!Wait(150)) return;
+                var f2 = bufB = Grab(bufB);
+                marks = LearnMarks(before, f, f2, castPoint.Value);
+                if (marks.Count > 0) Log(L.T("Splávek nalezen.", "Float found."));
             }
+
+            // 0) main signal: the float / rod tip is gone. On a bite the float also dips, but then the
+            //    minigame appears 1.2 s later, so "gone for 1.7 s" means the game reeled the line in.
+            if (marks.Count > 0 && AnyMarkGone(marks, before, f, sw.ElapsedMilliseconds, 1700))
+            { noFish++; Log(L.T("Nezabrala - prut se vrátil, nahazuji znovu (po ", "No bite - the rod came back, casting again (after ") + (sw.ElapsedMilliseconds / 1000.0 + 2.9).ToString("0.0") + " s)."); Changed(); Wait(300); return; }
 
             // the energy shop may also pop up a moment later
             if (mask.Length < MinMaskPx && sw.ElapsedMilliseconds < 8000)
@@ -98,7 +98,7 @@ public static partial class FishaoBot
                 { noFish++; Log(L.T("Nezabrala - hra stáhla prut po ", "No bite - the game reeled in after ") + (sw.ElapsedMilliseconds / 1000.0 + 2.9).ToString("0.0") + " s."); Changed(); Wait(300); return; }
             }
             // 2) backup (only when the float colours could not be learned): the water square is empty again
-            if (fl != null) continue;
+            if (marks.Count > 0) continue;
             int changed = PatchDiff(emptyWater, Patch(f, castPoint.Value));
             if (changed >= FloatPresentPx) { floatSeen = true; emptyCount = 0; }
             else if (changed <= FloatGonePx && floatSeen) emptyCount++;
