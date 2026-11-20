@@ -37,7 +37,7 @@ public static class Updater
     {
         // GitHub only talks TLS 1.2+; .NET 4 defaults to older versions
         try { ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072; } catch { }
-        var wc = new WebClient();
+        var wc = new WebClient { Encoding = System.Text.Encoding.UTF8 };   // GitHub answers in UTF-8 (Czech letters)
         wc.Headers[HttpRequestHeader.UserAgent] = "FishaoBot-Updater";
         return wc;
     }
