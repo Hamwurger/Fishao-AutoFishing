@@ -21,7 +21,7 @@ using System.Web.Script.Serialization;
 
 public static class Updater
 {
-    public const string Version = "1.0.0";          // THIS program's version - raise it for every release
+    public const string Version = "1.1.0";          // THIS program's version - raise it for every release
     public const string DefaultRepo = "Hamwurger/Fishao-bot";         // "github-user/repository" - built into the exe
     public static string Repo = DefaultRepo;        // FishaoBot.ini "updaterepo=" can override it
     public static bool AutoCheck = true;            // look for a new version when the program starts
@@ -57,7 +57,7 @@ public static class Updater
         var r = new Release
         {
             Version = Str(d, "tag_name").TrimStart('v', 'V').Trim(),
-            Notes = Str(d, "body").Replace("\r", "").Trim(),
+            Notes = PlainText(Str(d, "body")),
             Page = Str(d, "html_url")
         };
         var assets = d.ContainsKey("assets") ? d["assets"] as IEnumerable : null;
@@ -71,6 +71,24 @@ public static class Updater
             }
         if (r.DownloadUrl == null) return null;   // a release without the exe - nothing to install
         return IsNewer(r.Version, Version) ? r : null;
+    }
+
+    // GitHub release text (Markdown) -> plain text for the message box: only the "what's new" part,
+    // without the warning box (quoted "> " lines) and without ** / # / ` marks
+    static string PlainText(string md)
+    {
+        var lines = new List<string>();
+        foreach (var raw in md.Replace("\r", "").Split('\n'))
+        {
+            string l = raw.TrimEnd();
+            if (l.TrimStart().StartsWith(">")) continue;
+            l = l.Replace("**", "").Replace("`", "");
+            l = System.Text.RegularExpressions.Regex.Replace(l, @"^\s*#+\s*", "");
+            l = System.Text.RegularExpressions.Regex.Replace(l, @"^(\s*)[-*]\s+", "$1•  ");
+            if (l.Length == 0 && (lines.Count == 0 || lines[lines.Count - 1].Length == 0)) continue;
+            lines.Add(l);
+        }
+        return string.Join("\n", lines.ToArray()).Trim();
     }
 
     static string Str(Dictionary<string, object> d, string k) { object o; return d.TryGetValue(k, out o) && o != null ? Convert.ToString(o, System.Globalization.CultureInfo.InvariantCulture) : ""; }

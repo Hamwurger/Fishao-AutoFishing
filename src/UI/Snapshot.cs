@@ -14,6 +14,7 @@ public class Snapshot
     public CatchInfo Record;          // biggest fish ever
     public int AllTimeFish, Games, NoFish, EnergyBought, CastPoints;
     public bool GameFound;
+    public bool CastUseArea, HasArea;   // casting into a drawn area instead of points
 
     public static Snapshot Take(TimeSpan runTime, bool gameFound)
     {
@@ -22,7 +23,8 @@ public class Snapshot
             Running = FishaoBot.IsRunning, Status = FishaoBot.Status ?? "", RunTime = runTime,
             Catches = FishaoBot.SessionCatches, Record = FishaoBot.Record, AllTimeFish = FishaoBot.AllTimeFish,
             Games = FishaoBot.Games, NoFish = FishaoBot.NoFish, EnergyBought = FishaoBot.EnergyBought,
-            CastPoints = FishaoBot.CastPoints.Length, GameFound = gameFound
+            CastPoints = FishaoBot.CastPoints.Length, GameFound = gameFound,
+            CastUseArea = FishaoBot.CastUseArea, HasArea = FishaoBot.CastArea.Length >= 3
         };
         foreach (var c in s.Catches)
         {

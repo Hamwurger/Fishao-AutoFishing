@@ -73,7 +73,8 @@ public class OverviewPage : Page
         tPoints.Set(s.Points.ToString());
         tEscaped.Set(s.Escaped.ToString(), s.NoFish > 0 ? s.NoFish + L.T("× nezabrala", "× no bite") : "");
         tTime.Set(s.RunTimeText, s.Running ? L.T("běží", "running") : "");
-        previewCard.SetHint(s.CastPoints == 0 ? L.T("místa nahození nejsou vybraná", "no cast points picked") : L.N(s.CastPoints, "místo nahození", "místa nahození", "míst nahození", "cast point", "cast points"));
+        if (s.CastUseArea) previewCard.SetHint(s.HasArea ? L.T("oblast nahazování", "cast area") : L.T("oblast není nakreslená", "no area drawn"));
+        else previewCard.SetHint(s.CastPoints == 0 ? L.T("místa nahození nejsou vybraná", "no cast points picked") : L.N(s.CastPoints, "místo nahození", "místa nahození", "míst nahození", "cast point", "cast points"));
         if (catchesChanged)
         {
             bestView.SetFish(s.Best);
@@ -99,8 +100,12 @@ public class OverviewPage : Page
             g.InterpolationMode = InterpolationMode.Bilinear;
             g.DrawImage(shot, 0, 0, small.Width, small.Height);
             g.ScaleTransform(k, k);
-            var pts = FishaoBot.CastPoints;
-            for (int i = 0; i < pts.Length; i++) CastMarker.Draw(g, pts[i], 1.8f / k, i + 1);
+            if (FishaoBot.CastUseArea) CastMarker.DrawArea(g, FishaoBot.CastArea, 2f / k);
+            else
+            {
+                var pts = FishaoBot.CastPoints;
+                for (int i = 0; i < pts.Length; i++) CastMarker.Draw(g, pts[i], 1.8f / k, i + 1);
+            }
         }
         var old = preview.Image; preview.Image = small; hasPicture = true; if (old != null) old.Dispose();
     }

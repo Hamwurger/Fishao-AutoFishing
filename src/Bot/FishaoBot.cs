@@ -68,9 +68,38 @@ public static partial class FishaoBot
     public static Point[] CastPoints { get { return (Point[])castPoints.Clone(); } set { castPoints = value == null ? new Point[0] : (Point[])value.Clone(); lastCastIndex = -1; Changed(); } }
     public static void AddCastPoint(Point p) { var l = new List<Point>(castPoints); l.Add(p); CastPoints = l.ToArray(); }
 
+    // cast area: a drawn outline on the water - the bot casts to a random point inside it
+    static volatile Point[] castArea = new Point[0];
+    public static Point[] CastArea { get { return (Point[])castArea.Clone(); } set { castArea = value == null ? new Point[0] : (Point[])value.Clone(); Changed(); } }
+    public static volatile bool CastUseArea = false;   // true = area, false = the picked points
+    public static bool HasCastTarget { get { return CastUseArea ? castArea.Length >= 3 : castPoints.Length > 0; } }
+
+    static bool InArea(Point[] poly, double x, double y)
+    {
+        bool inside = false;
+        for (int i = 0, j = poly.Length - 1; i < poly.Length; j = i++)
+            if ((poly[i].Y > y) != (poly[j].Y > y) &&
+                x < (poly[j].X - poly[i].X) * (y - poly[i].Y) / (double)(poly[j].Y - poly[i].Y) + poly[i].X)
+                inside = !inside;
+        return inside;
+    }
+
+    static Point? RandomInArea(Point[] poly)
+    {
+        int x0 = int.MaxValue, y0 = int.MaxValue, x1 = int.MinValue, y1 = int.MinValue;
+        foreach (var p in poly) { x0 = Math.Min(x0, p.X); y0 = Math.Min(y0, p.Y); x1 = Math.Max(x1, p.X); y1 = Math.Max(y1, p.Y); }
+        for (int t = 0; t < 500; t++)
+        {
+            int x = rnd.Next(x0, x1 + 1), y = rnd.Next(y0, y1 + 1);
+            if (InArea(poly, x, y)) return new Point(x, y);
+        }
+        return new Point((x0 + x1) / 2, (y0 + y1) / 2);   // a very thin outline - its middle
+    }
+
     // a random point, different from the previous one when there is a choice
     static Point? NextCastPoint()
     {
+        if (CastUseArea) { var area = castArea; return area.Length >= 3 ? RandomInArea(area) : null; }
         var pts = castPoints;
         if (pts.Length == 0) return null;
         int i = rnd.Next(pts.Length);
@@ -81,7 +110,7 @@ public static partial class FishaoBot
     public static Point? ClosePoint { get { return closePoint; } set { closePoint = value; Changed(); } }
     public static void Start()
     {
-        if (castPoints.Length == 0) { Log(L.T("Nejdřív vyber místo nahození.", "Pick a cast point first.")); return; }
+        if (!HasCastTarget) { Log(L.T("Nejdřív vyber místa nebo oblast nahození (Nastavení).", "Pick cast points or a cast area first (Settings).")); return; }
         if (!running) { noMoneyUntil = 0; ResetWatchdog(); running = true; Log(L.T("SPUŠTĚNO", "STARTED")); Changed(); }
     }
     public static void Stop() { if (running) { running = false; SetStatus(L.T("Zastaveno", "Stopped")); Log(L.T("ZASTAVENO", "STOPPED")); Changed(); } }

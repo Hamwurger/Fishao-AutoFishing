@@ -4,6 +4,15 @@ using System.Drawing.Drawing2D;
 
 public static class CastMarker
 {
+    // the cast area: see-through blue fill + outline (w = line width in picture pixels)
+    public static void DrawArea(Graphics g, Point[] area, float w)
+    {
+        if (area == null || area.Length < 3) return;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        using (var fill = new SolidBrush(Color.FromArgb(70, 90, 190, 255))) g.FillPolygon(fill, area);
+        using (var pen = new Pen(Color.FromArgb(230, 90, 190, 255), w) { LineJoin = LineJoin.Round }) g.DrawPolygon(pen, area);
+    }
+
     // w = line width in picture pixels
     public static void Draw(Graphics g, Point p, float w, int number)
     {

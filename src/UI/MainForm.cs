@@ -63,7 +63,7 @@ public class MainForm : Form
         uiTimer.Tick += delegate { RefreshUi(); };
         uiTimer.Start();
 
-        OnLog(DateTime.Now.ToString("HH:mm:ss") + "  " + (FishaoBot.CastPoints.Length == 0
+        OnLog(DateTime.Now.ToString("HH:mm:ss") + "  " + (!FishaoBot.HasCastTarget
             ? L.T("Vyber místa nahození (Nastavení) a zmáčkni Start.", "Pick cast points (Settings) and press Start.")
             : L.T("Připraveno - zmáčkni Start nebo F10.", "Ready - press Start or F10.")));
         RefreshUi();
@@ -418,12 +418,17 @@ public class MainForm : Form
     {
         var shot = FishaoBot.CaptureBitmap();
         if (shot == null) { MessageBox.Show(this, L.T("Hra neběží nebo je minimalizovaná.", "The game is not running or is minimised."), "Fishao Bot", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-        using (var dlg = new PickForm(shot, FishaoBot.CastPoints))
+        using (var dlg = new PickForm(shot, FishaoBot.CastPoints, FishaoBot.CastArea, FishaoBot.CastUseArea))
         {
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
                 FishaoBot.CastPoints = dlg.Points.ToArray();
-                OnLog(DateTime.Now.ToString("HH:mm:ss") + L.T("  Uloženo míst nahození: ", "  Cast points saved: ") + dlg.Points.Count);
+                FishaoBot.CastArea = dlg.Area.ToArray();
+                FishaoBot.CastUseArea = dlg.UseArea;
+                OnLog(DateTime.Now.ToString("HH:mm:ss") + (dlg.UseArea
+                    ? (dlg.Area.Count >= 3 ? L.T("  Uložena oblast nahazování - bot nahodí náhodně uvnitř.", "  Cast area saved - the bot casts at random inside it.")
+                                           : L.T("  Oblast nahazování není nakreslená.", "  No cast area drawn."))
+                    : L.T("  Uloženo míst nahození: ", "  Cast points saved: ") + dlg.Points.Count));
                 AppSettings.Save();
             }
         }

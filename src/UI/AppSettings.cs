@@ -31,6 +31,16 @@ public static class AppSettings
                         }
                         FishaoBot.CastPoints = list.ToArray();
                         break;
+                    case "castarea":
+                        var area = new List<Point>();
+                        foreach (var item in v.Split(';'))
+                        {
+                            var parts = item.Split(','); int x, y;
+                            if (parts.Length == 2 && int.TryParse(parts[0], out x) && int.TryParse(parts[1], out y)) area.Add(new Point(x, y));
+                        }
+                        FishaoBot.CastArea = area.ToArray();
+                        break;
+                    case "castmode": FishaoBot.CastUseArea = v == "area"; break;
                     case "hover": if (num) FishaoBot.CastHoverMs = Clamp(n, 200, 3000); break;
                     case "timeout": if (num) FishaoBot.BiteTimeoutMs = Clamp(n, 20, 600) * 1000; break;
                     case "after": if (num) FishaoBot.AfterGameDelayMs = Clamp(n, 1, 20) * 1000; break;
@@ -57,8 +67,12 @@ public static class AppSettings
         {
             var parts = new List<string>();
             foreach (var cp in FishaoBot.CastPoints) parts.Add(cp.X + "," + cp.Y);
+            var areaParts = new List<string>();
+            foreach (var ap in FishaoBot.CastArea) areaParts.Add(ap.X + "," + ap.Y);
             File.WriteAllLines(FilePath, new[] {
                 "cast=" + string.Join(";", parts.ToArray()),
+                "castarea=" + string.Join(";", areaParts.ToArray()),
+                "castmode=" + (FishaoBot.CastUseArea ? "area" : "points"),
                 "hover=" + FishaoBot.CastHoverMs,
                 "timeout=" + FishaoBot.BiteTimeoutMs / 1000,
                 "after=" + FishaoBot.AfterGameDelayMs / 1000,

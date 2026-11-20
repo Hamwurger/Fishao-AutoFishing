@@ -57,9 +57,9 @@ public class SettingsPage : Page
         // ---- cast points
         var castCard = Place(grid, new Card(L.T("Místa nahození", "Cast points"), IconKind.Target), 0, 0);
         var castBody = Stack(castCard);
-        var info = new Label { Text = L.T("Klikni na místa na vodě, kam má bot nahazovat. Když jich vybereš víc, střídá je náhodně - vypadá to přirozeněji a ryby nedojdou.", "Click the spots on the water where the bot should cast. With more of them it alternates at random - looks more natural and the fish don't run out."), AutoSize = false, Height = 64, ForeColor = Theme.Muted, BackColor = Theme.Card, Margin = new Padding(0, 0, 0, 10) };
+        var info = new Label { Text = L.T("Buď klikni terčíky na vodu (bot je náhodně střídá), nebo nakresli oblast - bot pak nahodí pokaždé jinam uvnitř ní.", "Either click points on the water (the bot alternates between them) or draw an area - the bot then casts somewhere else inside it each time."), AutoSize = false, Height = 64, ForeColor = Theme.Muted, BackColor = Theme.Card, Margin = new Padding(0, 0, 0, 10) };
         castLabel = new Label { AutoSize = false, Height = 30, ForeColor = Theme.Fg, BackColor = Theme.Card, Font = Theme.F(11f, true), Margin = new Padding(0, 0, 0, 12), TextAlign = ContentAlignment.MiddleLeft };
-        var pick = new ModernButton(L.T("Vybrat místa na vodě", "Pick spots on the water"), Theme.Blue, IconKind.Target) { Height = 42, Margin = new Padding(0) };
+        var pick = new ModernButton(L.T("Vybrat místa / oblast na vodě", "Pick points / area on the water"), Theme.Blue, IconKind.Target) { Height = 42, Margin = new Padding(0) };
         pick.Click += delegate { if (PickCastPoints != null) PickCastPoints(); };
         castBody.Controls.Add(info); castBody.Controls.Add(castLabel); castBody.Controls.Add(pick);
 
@@ -257,8 +257,11 @@ public class SettingsPage : Page
     public override void UpdateData(Snapshot s, bool catchesChanged)
     {
         int n = s.CastPoints;
-        string t = n == 0 ? L.T("Zatím nic nevybráno", "Nothing picked yet") : (n == 1 ? L.T("1 místo  (doporučuji víc)", "1 spot  (more is better)") : L.N(n, "místo", "místa", "míst", "spot", "spots") + L.T("  ·  střídá je náhodně", "  ·  picked at random"));
-        if (castLabel.Text != t) { castLabel.Text = t; castLabel.ForeColor = n == 0 ? Theme.Orange : Theme.Fg; }
+        bool none = s.CastUseArea ? !s.HasArea : n == 0;
+        string t = s.CastUseArea
+            ? (s.HasArea ? L.T("Oblast  ·  nahazuje náhodně uvnitř", "Area  ·  casts at random inside") : L.T("Oblast zatím není nakreslená", "No area drawn yet"))
+            : n == 0 ? L.T("Zatím nic nevybráno", "Nothing picked yet") : (n == 1 ? L.T("1 místo  (doporučuji víc)", "1 spot  (more is better)") : L.N(n, "místo", "místa", "míst", "spot", "spots") + L.T("  ·  střídá je náhodně", "  ·  picked at random"));
+        if (castLabel.Text != t) { castLabel.Text = t; castLabel.ForeColor = none ? Theme.Orange : Theme.Fg; }
     }
 }
 
