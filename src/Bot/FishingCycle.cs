@@ -36,7 +36,7 @@ public static partial class FishaoBot
         int[] emptyWater = Patch(before, castPoint.Value);
 
         SetStatus(L.T("Nahazuji", "Casting"));
-        Log(L.T("Nahazuji...", "Casting..."));
+        Log(L.T("Nahazuji (míření ", "Casting (aiming ") + CastHoverMs + L.T(" ms, záběr čekám max. ", " ms, waiting for a bite max. ") + BiteTimeoutMs / 1000 + " s)...");
         HoverThenClick(castPoint.Value, CastHoverMs);
         if (!Wait(2500)) return; // throw animation
         var sw = Stopwatch.StartNew();
@@ -112,6 +112,7 @@ public static partial class FishaoBot
         Release();
         Log(L.T("Minihra č. ", "Minigame #") + games + L.T(" skončila.", " finished."));
         SetStatus(L.T("Čekám na okno s výsledkem", "Waiting for the result window"));
+        Log(L.T("Čekám na okno s rybou (max. ", "Waiting for the fish window (max. ") + (AfterGameDelayMs + 6000) / 1000 + " s).");
 
         // wait for the result dialog and close it with its X button
         var sw2 = Stopwatch.StartNew(); bool closed = false;
