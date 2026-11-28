@@ -31,6 +31,8 @@ An auto-fishing bot for **FISHAO – Reborn** (private server). It casts, plays 
 - **Background mode** – reads the picture straight from the game window and sends clicks and keys straight to it. Your real mouse and keyboard stay free, and the game window may be covered by other windows.
 - **Casting** – either click a few **points** on the water (the bot alternates between them at random), or draw an **area** and the bot casts somewhere else inside it each time.
 - **Fast recast** – when no fish bites and the game reels the line in, the bot notices within about a second and casts again.
+- **Any water** – works on calm lakes, swamps and oases as well as on the sea with moving waves.
+- **New place check** – when you start the bot at another fishing spot than where you picked the cast points, it stops and tells you to pick them again.
 - **Minigame** – plays the fishing minigame by itself.
 - **Catch log** – reads the fish name, size, stars and points from the catch window, keeps statistics and remembers your record fish.
 - **Dialogs** – closes catch windows, level-up windows and other pop-ups.
@@ -100,6 +102,7 @@ Work from any window, even when the bot window is in the background.
 | `catches.csv` | Every catch: time, fish, size, stars, points |
 | `record.png` | Picture of your biggest fish |
 | `bait.png` | The bait you picked |
+| `castview.png` | A tiny picture of the place where the cast spots were picked (to notice when you start the bot somewhere else) |
 
 To move the bot to another computer, copy the whole folder. To start from scratch, delete these files.
 
@@ -117,6 +120,7 @@ You can also check by hand in **Settings → Updates → Check now**, or turn th
 | Nothing happens / black picture | The game window is minimised – restore it (it may stay behind other windows). |
 | The rod doesn't cast, or the character walks away | Make sure the points / area are on water inside the rod's range. Raise **Aim before the cast**. |
 | It waits long after a missed bite | Check the **Log**: "Float found" should appear after each cast. If it says it can't see the float, try other cast spots away from other players. |
+| "It looks like you are at another place…" | You moved to another fishing spot (or resized the game window). Pick the cast points / area again. |
 | Fish are missing from the catch list | Raise **Wait for the fish window**. |
 | The bot stopped with a notification | The watchdog found a problem (game closed, frozen, disconnected, or a window that couldn't be closed). The reason is in the **Log**. |
 | Something else | Use **Log → Copy** and include the text when reporting the problem. |

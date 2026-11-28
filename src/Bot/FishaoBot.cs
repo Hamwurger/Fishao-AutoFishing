@@ -111,7 +111,7 @@ public static partial class FishaoBot
     public static void Start()
     {
         if (!HasCastTarget) { Log(L.T("Nejdřív vyber místa nebo oblast nahození (Nastavení).", "Pick cast points or a cast area first (Settings).")); return; }
-        if (!running) { noMoneyUntil = 0; ResetWatchdog(); running = true; Log(L.T("SPUŠTĚNO", "STARTED")); Changed(); }
+        if (!running) { noMoneyUntil = 0; checkView = true; ResetWatchdog(); running = true; Log(L.T("SPUŠTĚNO", "STARTED")); Changed(); }
     }
     public static void Stop() { if (running) { running = false; SetStatus(L.T("Zastaveno", "Stopped")); Log(L.T("ZASTAVENO", "STOPPED")); Changed(); } }
     public static void Quit() { running = false; quit = true; }

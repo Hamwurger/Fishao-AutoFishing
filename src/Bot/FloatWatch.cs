@@ -29,7 +29,7 @@ public static partial class FishaoBot
             for (int x = 0; x < a.W; x++)
             {
                 int i = y * a.Stride + x * 4;
-                if (Diff(before, a, i) > 60 && Diff(a, b, i) < 25)
+                if (Diff(before, a, i) > 60 && Diff(a, b, i) < 25 && !WaterAt(a, i))
                 {
                     list.Add(i);
                     if (list.Count > 40000) return new int[0]; // whole view changed (scrolling/dialog) - unusable
@@ -60,6 +60,16 @@ public static partial class FishaoBot
     public class FloatInfo { public Point C; public List<int> Colors = new List<int>(); }
 
     static int Sat(int r, int g, int b) { return Math.Max(r, Math.Max(g, b)) - Math.Min(r, Math.Min(g, b)); }
+
+    // Colours of water itself: any blue (deep, light, turquoise) and whitish-blue foam. On a sea with moving waves
+    // these pixels change all the time, so they must never be taken for the float, the line or the rod.
+    static bool WaterColor(int r, int g, int b)
+    {
+        if (b > r + 40 && b + 20 > g) return true;                       // blue / turquoise water
+        if (b >= r && b >= g - 10 && r > 150 && b - r < 70) return true;   // light foam on the waves (white-blue)
+        return false;
+    }
+    static bool WaterAt(Frame f, int i) { return WaterColor(f.Px[i + 2], f.Px[i + 1], f.Px[i]); }
 
     // Finds what the cast put on the screen near the click: clusters of new, colourful pixels that also stayed
     // in place between "a" and "b" (walking players move, so they are left out) - the float, the rod tip over
@@ -170,7 +180,7 @@ public static partial class FishaoBot
         int i = y * a.Stride + x * 4, r, g, bl;
         if (Diff(before, a, i) < 90 || Diff(a, b, i) > 60) return false;
         a.Get(x, y, out r, out g, out bl);
-        return Sat(r, g, bl) >= 70;
+        return Sat(r, g, bl) >= 70 && !WaterColor(r, g, bl);
     }
 
     // colours of the float at its real position c (found by FindNewMarks). Only pixels that are new since
@@ -185,7 +195,7 @@ public static partial class FishaoBot
             {
                 int i = y * a.Stride + x * 4, r, g, b;
                 a.Get(x, y, out r, out g, out b);
-                if (Diff(before, a, i) < 90 || Sat(r, g, b) < 70) continue;
+                if (Diff(before, a, i) < 90 || Sat(r, g, b) < 70 || WaterColor(r, g, b)) continue;
                 if (fi.Colors.Count < 40) fi.Colors.Add((r << 16) | (g << 8) | b);
             }
         return fi.Colors.Count >= 3 ? fi : null;
@@ -230,7 +240,7 @@ public static partial class FishaoBot
             for (int x = Math.Max(0, c.X - rr); x <= Math.Min(now.W - 1, c.X + rr); x++)
             {
                 int r, g, b; now.Get(x, y, out r, out g, out b);
-                if (Sat(r, g, b) < 60) continue;
+                if (Sat(r, g, b) < 60 || WaterColor(r, g, b)) continue;   // waves never count
                 if (Diff(before, now, y * now.Stride + x * 4) < 50) continue;   // looks like before the cast = not the float
                 foreach (int col in fi.Colors)
                     if (Math.Abs(r - ((col >> 16) & 255)) + Math.Abs(g - ((col >> 8) & 255)) + Math.Abs(b - (col & 255)) < 70) { n++; break; }

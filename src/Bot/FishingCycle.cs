@@ -32,14 +32,14 @@ public static partial class FishaoBot
             else Wait(500);
             return;
         }
+        if (!CheckCastView(before)) return;   // another place than where the cast spots were picked
         if (BaitEmpty(before)) { HandleNoBait(); return; }
         int[] emptyWater = Patch(before, castPoint.Value);
-        RememberHome(before);   // if the character walks away, this is where it goes back to
 
         SetStatus(L.T("Nahazuji", "Casting"));
         Log(L.T("Nahazuji (míření ", "Casting (aiming ") + CastHoverMs + L.T(" ms, záběr čekám max. ", " ms, waiting for a bite max. ") + BiteTimeoutMs / 1000 + " s)...");
         HoverThenClick(castPoint.Value, CastHoverMs);
-        if (!running || !Wait(2500)) return; // throw animation
+        if (!Wait(2500)) return; // throw animation
         var sw = Stopwatch.StartNew();
 
         // "cast mask": pixels that changed because of the cast (line, float, rod) and are not moving
@@ -47,16 +47,6 @@ public static partial class FishaoBot
         var buy = FindEnergyBuyButton(a);
         if (buy != null) { HandleNoEnergy(buy.Value, before); return; }
         if (!Wait(400)) return; Frame b = bufB = Grab(bufB);
-        // the character walked instead of casting: the game view scrolled after it, so every cast point is
-        // now somewhere else (on the shore, on other players...) - further clicks would only make it worse
-        if (!IsDimmed(b) && Math.Max(ShiftedPart(before, a), ShiftedPart(before, b)) > 0.08)
-        {
-            if (WalkBack()) { Wait(500); return; }   // back in place - the next cycle casts again
-            if (!running) return;
-            ReportProblem(L.T("Postava místo nahození odešla a obraz hry se posunul. Bot jsem zastavil - vrať postavu na místo a znovu vyber místa nahození (dál od břehu a od ostatních hráčů).",
-                              "The character walked away instead of casting and the game view moved. The bot was stopped - bring the character back and pick the cast spots again (further from the shore and other players)."));
-            return;
-        }
         int[] mask = CastMask(before, a, b);
         if (mask.Length < MinMaskPx) Log(L.T("Nahození jsem na obrazovce nepoznal - neodešla postava místo nahazování?", "Could not see the cast on screen - did the character walk away instead of casting?"));
         else LearnBrightness(OuterBrightness(before)); // the cast worked = no dialog was open = normal brightness
@@ -153,20 +143,6 @@ public static partial class FishaoBot
         if (CloseLevelUp(after)) after = Grab();
         if (IsDimmed(after)) ClearDialogs(true);
         Wait(500);
-    }
-
-    // share of the picture that changed a lot (sampled every 8 px). A cast changes ~1-3 %, a scrolled view 10 %+.
-    static double ShiftedPart(Frame x, Frame y)
-    {
-        if (x == null || y == null || x.W != y.W || x.H != y.H) return 0;
-        int n = 0, t = 0;
-        for (int yy = 0; yy < x.H; yy += 8)
-            for (int xx = 0; xx < x.W; xx += 8)
-            {
-                int i = yy * x.Stride + xx * 4; t++;
-                if (Diff(x, y, i) > 60) n++;
-            }
-        return t == 0 ? 0 : (double)n / t;
     }
 
     static void PlayMinigame(Bar bar, int top)

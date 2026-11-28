@@ -425,6 +425,7 @@ public class MainForm : Form
                 FishaoBot.CastPoints = dlg.Points.ToArray();
                 FishaoBot.CastArea = dlg.Area.ToArray();
                 FishaoBot.CastUseArea = dlg.UseArea;
+                FishaoBot.SaveCastView(shot);   // to notice later that the bot runs at another place
                 OnLog(DateTime.Now.ToString("HH:mm:ss") + (dlg.UseArea
                     ? (dlg.Area.Count >= 3 ? L.T("  Uložena oblast nahazování - bot nahodí náhodně uvnitř.", "  Cast area saved - the bot casts at random inside it.")
                                            : L.T("  Oblast nahazování není nakreslená.", "  No cast area drawn."))
